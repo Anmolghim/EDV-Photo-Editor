@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Cropper</title>
+    <link href="https://unpkg.com/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/cropperjs@1.5.12/dist/cropper.min.js"></script>
+    <style>
+        #croppedResult img {
+            border: 1px solid black;
+            margin-top: 10px;
+            max-width: 100%; /* Responsive */
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload and Crop Image</h1>
+    <button id="chooseFileButton">Choose File</button>
+    <input type="file" id="inputImage" accept="image/*" style="display: none;">
+    <div>
+        <img id="imagePreview" style="width: 100%;  max-width: 300px;" alt="Image Preview">
+    </div>
+    <button id="cropButton" style="display: none;">Crop Image</button>
+    <div id="croppedResult"></div>
+    <button id="uploadCropImage">upload image</button>
+    <button id="downloadButton" style="display: none;">Download Cropped Image</button>
+
+    <script>
+        const chooseFileButton = document.getElementById("chooseFileButton");
+        const inputImage = document.getElementById("inputImage");
+        const cropButton = document.getElementById("cropButton");
+        const downloadButton = document.getElementById("downloadButton");
+        const croppedResult = document.getElementById("croppedResult");
+        const imagePreview = document.getElementById("imagePreview");
+        const UploadCropImage = document.querySelector("#uploadCropImage")
+        let cropper, croppedCanvas;
+
+        // Create file input when the "Choose File" button is clicked
+        chooseFileButton.addEventListener("click", function() {
+            inputImage.click(); // Trigger the file input click
+        });
+
+        inputImage.addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block'; // Show the image
+                    if (cropper) {
+                        cropper.destroy(); // Destroy the old cropper instance if it exists
+                    }
+                    cropper = new Cropper(imagePreview, {
+                        aspectRatio: 1, // 1:1 ratio for a square crop
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        scalable: false,
+                        zoomable: false
+                    });
+                    cropButton.style.display = 'block'; // Show the crop button
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        cropButton.addEventListener("click", function() {
+            if (cropper) {
+                // Crop and resize to 600x600
+                croppedCanvas = cropper.getCroppedCanvas({
+                    width: 600,
+                    height: 600
+                });
+
+                // Convert canvas to image and display
+                const croppedImage = document.createElement("img");
+                croppedImage.src = croppedCanvas.toDataURL("image/png"); // or "image/jpeg"
+                croppedResult.innerHTML = ""; // Clear previous results
+                croppedResult.appendChild(croppedImage);
+
+                // Show the download button
+                downloadButton.style.display = "block";
+            }
+        });
+
+        // Download the cropped image when the "Download" button is clicked
+        downloadButton.addEventListener("click", function() {
+            if (croppedCanvas) {
+                // Create a temporary link element to trigger download
+                const link = document.createElement("a");
+                link.href = croppedCanvas.toDataURL("image/png"); // or "image/jpeg" for JPG format
+                link.download = "cropped_image.png"; // Filename for the downloaded image
+                link.click(); // Trigger the download
+            }
+        });
+    </script>
+</body>
+</html>
